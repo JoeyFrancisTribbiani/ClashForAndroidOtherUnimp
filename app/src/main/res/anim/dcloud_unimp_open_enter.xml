@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="#00000000" android:zAdjustment="top"
+    tools:ignore="MissingDefaultResource">
+<!--    <translate android:duration="360" android:fromXDelta="0%p" android:toXDelta="100%p"/>-->
+    <rotate android:duration="1" android:fromAlpha="0" android:toAlpha="1"/>
+</set>
