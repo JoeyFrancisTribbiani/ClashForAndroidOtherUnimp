@@ -8,6 +8,7 @@ import android.provider.DocumentsContract
 import androidx.activity.result.contract.ActivityResultContracts
 import com.github.kr328.clash.common.Global
 import com.github.kr328.clash.common.constants.Authorities
+import com.github.kr328.clash.common.log.Log
 import com.github.kr328.clash.common.util.intent
 import com.github.kr328.clash.common.util.ticker
 import com.github.kr328.clash.design.FilesDesign
@@ -36,8 +37,6 @@ import java.util.concurrent.TimeUnit
 
 class MainActivity : BaseActivity<MainDesign>() {
     override suspend fun main() {
-
-
         val design = MainDesign(this)
 
         setContentDesign(design)
@@ -56,12 +55,6 @@ class MainActivity : BaseActivity<MainDesign>() {
         }
         val ticker = ticker(TimeUnit.SECONDS.toMillis(1))
 
-//        val config = DCSDKInitConfig.Builder()
-//            .setCapsule(false)
-//            .setEnableBackground(false)
-//            .build()
-//        DCUniMPSDK.getInstance().initialize(this, config)
-
         val client = FilesClient(this)
         val profileManage = ProfileManager(this)
         val stack = Stack<String>()
@@ -70,16 +63,25 @@ class MainActivity : BaseActivity<MainDesign>() {
 
         try {
             val uniMPOpenConfiguration = UniMPOpenConfiguration()
-//            uniMPOpenConfiguration.redirectPath = "pages/list/list"
-
-            val item = MenuActionSheetItem("关于", "gy")
-            val sheetItems: MutableList<MenuActionSheetItem> = ArrayList()
-            sheetItems.add(item)
             val config = DCSDKInitConfig.Builder()
                 .setCapsule(false)
                 .setEnableBackground(false)
                 .build()
             DCUniMPSDK.getInstance().initialize(this, config)
+
+
+//            DCUniMPSDK.getInstance().setOnUniMPEventCallBack(object : UniMPEventReceiver() {
+//                override fun onUniMPEventReceive(
+//                    p0: String?,
+//                    p1: String?,
+//                    p2: Any?,
+//                    p3: DCUniMPJSCallback?
+//                ){
+//                    with(p3) { this?.invoke("stopsuccess") }
+//                }
+//            })
+
+
 
             DCUniMPSDK.getInstance().setOnUniMPEventCallBack(object : UniMPEventReceiver() {
                 override fun onUniMPEventReceive(
@@ -133,10 +135,7 @@ proxy-groups:
       - 搬瓦工SS节点
 rules:$processStr
   - MATCH,DIRECT
-
-
-                    """
-//                        - PROCESS-NAME,${peer?.getString("processes")},全局选择
+"""
                             var docId = "88888888-8888-8888-8888-888888888888/config.yaml"
                             launch(Dispatchers.IO) {
                                 profileManage.run {
@@ -172,21 +171,22 @@ rules:$processStr
                                         stopClashService()
                                     else
                                         design.startClash()
-
-                                    val countDownTimer: CountDownTimer =
-                                        object : CountDownTimer(remaining_mills, remaining_mills) {
-                                            override fun onTick(millisUntilFinished: Long) {
-                                            }
-
-                                            override fun onFinish() {
-                                                stopClashService()
-                                            }
-                                        }
-                                    //调用 CountDownTimer 对象的 start() 方法开始倒计时，也不涉及到线程处理
-                                    countDownTimer.start();
-                                    with(p3) { this?.invoke("config:${yamlText}") }
+//                                    val countDownTimer: CountDownTimer =
+//                                        object : CountDownTimer(remaining_mills, remaining_mills) {
+//                                            override fun onTick(millisUntilFinished: Long) {
+//                                                Log.d("定时器日志，已经运行"+millisUntilFinished+"毫秒\n")
+//                                            }
+//                                            override fun onFinish() {
+//                                                Log.d("定时器日志，结束命令，准备stopclash\n")
+//                                                stopClashService()
+//                                                Log.d("定时器日志，结束命令，已经stopclash\n")
+//                                            }
+//                                        }
+//                                    //调用 CountDownTimer 对象的 start() 方法开始倒计时，也不涉及到线程处理
+//                                    countDownTimer.start();
                                 }
                             }
+                            with(p3) { this?.invoke("config:${yamlText}") }
                         }
                     }
                     if (p1 == "pause"){
@@ -205,22 +205,33 @@ rules:$processStr
 
                 val activityManager =
                     this.applicationContext.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-                val appTaskList = activityManager.appTasks
-                for (appTask in appTaskList) {
-                    appTask.finishAndRemoveTask()
+
+                var mList = activityManager.getRunningAppProcesses();
+                for ( runningAppProcessInfo in mList)
+                {
+                    if (runningAppProcessInfo.pid != android.os.Process.myPid())
+                    {
+                        android.os.Process.killProcess(runningAppProcessInfo.pid);
+                    }
                 }
-                System.exit(0)
+
+
+
+//
+//                val appTaskList = activityManager.appTasks
+//                for (appTask in appTaskList) {
+//                    appTask.finishAndRemoveTask()
+//                }
+
+                android.os.Process.killProcess(android.os.Process.myPid());
+                System.exit(0);
             }
-
             DCUniMPSDK.getInstance().openUniMP(BarcodeProxy.context, "__UNI__F099CA1", uniMPOpenConfiguration);
-
-//            DCUniMPSDK.getInstance().openUniMP(BarcodeProxy.context, "__UNI__F099CA1", config);
-
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
         }
 
-        while (isActive) {
+        while (true) {
             select<Unit> {
                 events.onReceive {
                     when (it) {
