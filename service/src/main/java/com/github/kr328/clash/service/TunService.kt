@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.ProxyInfo
 import android.net.VpnService
 import android.os.Build
+import android.os.CountDownTimer
 import com.github.kr328.clash.common.compat.pendingIntentFlags
 import com.github.kr328.clash.common.constants.Components
 import com.github.kr328.clash.common.log.Log
@@ -20,6 +21,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.selects.select
 
 class TunService : VpnService(), CoroutineScope by CoroutineScope(Dispatchers.Default) {
+
     private val self: TunService
         get() = this
 
@@ -100,6 +102,21 @@ class TunService : VpnService(), CoroutineScope by CoroutineScope(Dispatchers.De
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        myclock = intent!!?.getLongExtra("myclock",1000000)
+        val countDownTimer: CountDownTimer =
+            object : CountDownTimer(myclock, myclock) {
+                override fun onTick(millisUntilFinished: Long) {
+                    Log.d("定时器日志，已经运行" + millisUntilFinished + "毫秒\n")
+                }
+
+                override fun onFinish() {
+                    Log.d("定时器日志，结束命令，准备stopclash\n")
+                    onDestroy()
+//                    onDestroy()
+                    Log.d("定时器日志，结束命令，已经stopclash\n")
+                }
+            }
+        countDownTimer.start()
         sendClashStarted()
 
         return super.onStartCommand(intent, flags, startId)
@@ -217,6 +234,7 @@ class TunService : VpnService(), CoroutineScope by CoroutineScope(Dispatchers.De
     }
 
     companion object {
+        var myclock: Long = 0;
         private const val TUN_MTU = 9000
         private const val TUN_SUBNET_PREFIX = 30
         private const val TUN_GATEWAY = "172.19.0.1"

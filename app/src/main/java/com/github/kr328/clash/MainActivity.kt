@@ -3,12 +3,9 @@ package com.github.kr328.clash
 import android.app.ActivityManager
 import android.content.Context
 import android.net.VpnService
-import android.os.CountDownTimer
 import android.provider.DocumentsContract
 import androidx.activity.result.contract.ActivityResultContracts
-import com.github.kr328.clash.common.Global
 import com.github.kr328.clash.common.constants.Authorities
-import com.github.kr328.clash.common.log.Log
 import com.github.kr328.clash.common.util.intent
 import com.github.kr328.clash.common.util.ticker
 import com.github.kr328.clash.design.FilesDesign
@@ -16,21 +13,22 @@ import com.github.kr328.clash.design.MainDesign
 import com.github.kr328.clash.design.ui.ToastDuration
 import com.github.kr328.clash.remote.FilesClient
 import com.github.kr328.clash.service.ProfileManager
+import com.github.kr328.clash.service.TunService
 import com.github.kr328.clash.service.model.Profile
 import com.github.kr328.clash.store.TipsStore
 import com.github.kr328.clash.util.*
 import io.dcloud.feature.barcode2.BarcodeProxy
 import io.dcloud.feature.sdk.DCSDKInitConfig
 import io.dcloud.feature.sdk.DCUniMPSDK
-import io.dcloud.feature.sdk.MenuActionSheetItem
+import io.dcloud.feature.sdk.Interface.IUniMP
 import io.dcloud.feature.unimp.DCUniMPJSCallback
 import io.dcloud.feature.unimp.config.UniMPOpenConfiguration
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
+import org.json.JSONObject
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -55,12 +53,11 @@ class MainActivity : BaseActivity<MainDesign>() {
         }
         val ticker = ticker(TimeUnit.SECONDS.toMillis(1))
 
-        val client = FilesClient(this)
+//        val client = FilesClient(this)
         val profileManage = ProfileManager(this)
-        val stack = Stack<String>()
+//        val stack = Stack<String>()
         var root = "88888888-8888-8888-8888-888888888888"
-        var docId = "88888888-8888-8888-8888-888888888888/config.yaml"
-
+//        var docId = "88888888-8888-8888-8888-888888888888/config.yaml"
         try {
             val uniMPOpenConfiguration = UniMPOpenConfiguration()
             val config = DCSDKInitConfig.Builder()
@@ -68,20 +65,6 @@ class MainActivity : BaseActivity<MainDesign>() {
                 .setEnableBackground(false)
                 .build()
             DCUniMPSDK.getInstance().initialize(this, config)
-
-
-//            DCUniMPSDK.getInstance().setOnUniMPEventCallBack(object : UniMPEventReceiver() {
-//                override fun onUniMPEventReceive(
-//                    p0: String?,
-//                    p1: String?,
-//                    p2: Any?,
-//                    p3: DCUniMPJSCallback?
-//                ){
-//                    with(p3) { this?.invoke("stopsuccess") }
-//                }
-//            })
-
-
 
             DCUniMPSDK.getInstance().setOnUniMPEventCallBack(object : UniMPEventReceiver() {
                 override fun onUniMPEventReceive(
@@ -100,6 +83,9 @@ class MainActivity : BaseActivity<MainDesign>() {
                             var remaining_mills: Long = 0
                             if (remaining != null) {
                                 remaining_mills = (remaining * 60 * 1000).toLong()
+                                if (remaining_mills<0){
+                                    remaining_mills = 0
+                                }
                             }
                             var processes = peer?.getString("processes")?.split(',')
                             var processStr = """
@@ -169,29 +155,34 @@ rules:$processStr
                                     setActive(profile)
                                     if (clashRunning)
                                         stopClashService()
-                                    else
-                                        design.startClash()
-//                                    val countDownTimer: CountDownTimer =
-//                                        object : CountDownTimer(remaining_mills, remaining_mills) {
-//                                            override fun onTick(millisUntilFinished: Long) {
-//                                                Log.d("定时器日志，已经运行"+millisUntilFinished+"毫秒\n")
-//                                            }
-//                                            override fun onFinish() {
-//                                                Log.d("定时器日志，结束命令，准备stopclash\n")
-//                                                stopClashService()
-//                                                Log.d("定时器日志，结束命令，已经stopclash\n")
-//                                            }
-//                                        }
-//                                    //调用 CountDownTimer 对象的 start() 方法开始倒计时，也不涉及到线程处理
-//                                    countDownTimer.start();
+                                    else {
+//                                        TunService.myclock = remaining_mills
+                                        design.startClash(remaining_mills)
+                                    }
                                 }
                             }
-                            with(p3) { this?.invoke("config:${yamlText}") }
+                            var status = "stoped"
+                            if (clashRunning){
+                                status=  "running"
+                            }
+                            with(p3) { this?.invoke(status) }
                         }
                     }
                     if (p1 == "pause"){
                         stopClashService()
-                        with(p3) { this?.invoke("stopsuccess") }
+                        Thread.sleep(2000L)
+                        var status = "stoped"
+                        if (clashRunning){
+                            status=  "running"
+                        }
+                        with(p3) { this?.invoke(status) }
+                    }
+                    if (p1 == "status"){
+                        var status = "stoped"
+                        if (clashRunning){
+                            status=  "running"
+                        }
+                        with(p3) { this?.invoke(status) }
                     }
                 }
             })
@@ -248,7 +239,7 @@ rules:$processStr
                             if (clashRunning)
                                 stopClashService()
                             else
-                                design.startClash()
+                                design.startClash(10000000)
                         }
                         MainDesign.Request.OpenProxy ->
                             startActivity(ProxyActivity::class.intent)
@@ -313,7 +304,7 @@ rules:$processStr
         }
     }
 
-    private suspend fun MainDesign.startClash() {
+    private suspend fun MainDesign.startClash(clock :Long) {
         val active = withProfile { queryActive() }
 
         if (active == null || !active.imported) {
@@ -326,7 +317,7 @@ rules:$processStr
             return
         }
 
-        val vpnRequest = startClashService()
+        val vpnRequest = startClashService(clock)
 
         try {
             if (vpnRequest != null) {
@@ -336,7 +327,7 @@ rules:$processStr
                 )
 
                 if (result.resultCode == RESULT_OK)
-                    startClashService()
+                    startClashService(clock)
             }
         } catch (e: Exception) {
             design?.showToast(R.string.unable_to_start_vpn, ToastDuration.Long)
@@ -348,19 +339,19 @@ rules:$processStr
             packageManager.getPackageInfo(packageName, 0).versionName
         }
     }
-
-    private suspend fun FilesDesign.fetch(client: FilesClient, stack: Stack<String>, root: String) {
-        val documentId = stack.lastOrNull() ?: root
-        val files = if (stack.empty()) {
-            val list = client.list(documentId)
-            val config = list.firstOrNull { it.id.endsWith("config.yaml") }
-
-            if (config == null || config.size > 0) list else listOf(config)
-        } else {
-            client.list(documentId)
-        }
-
-        swapFiles(files, stack.empty())
-    }
+//
+//    private suspend fun FilesDesign.fetch(client: FilesClient, stack: Stack<String>, root: String) {
+//        val documentId = stack.lastOrNull() ?: root
+//        val files = if (stack.empty()) {
+//            val list = client.list(documentId)
+//            val config = list.firstOrNull { it.id.endsWith("config.yaml") }
+//
+//            if (config == null || config.size > 0) list else listOf(config)
+//        } else {
+//            client.list(documentId)
+//        }
+//
+//        swapFiles(files, stack.empty())
+//    }
 
 }

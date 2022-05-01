@@ -25,7 +25,7 @@ class TileService : TileService() {
 
         when (tile.state) {
             Tile.STATE_INACTIVE -> {
-                startClashService()
+                startClashService(10000000)
             }
             Tile.STATE_ACTIVE -> {
                 stopClashService()

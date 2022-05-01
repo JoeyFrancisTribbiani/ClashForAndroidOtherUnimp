@@ -2,6 +2,7 @@ package com.github.kr328.clash.service
 
 import android.content.Intent
 import android.os.Binder
+import android.os.CountDownTimer
 import android.os.IBinder
 import com.github.kr328.clash.common.log.Log
 import com.github.kr328.clash.service.clash.clashRuntime
@@ -87,8 +88,9 @@ class ClashService : BaseService() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        sendClashStarted()
 
+
+        sendClashStarted()
         return START_STICKY
     }
 

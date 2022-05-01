@@ -7,13 +7,10 @@ import com.github.kr328.clash.common.compat.currentProcessName
 import com.github.kr328.clash.common.log.Log
 import com.github.kr328.clash.remote.Remote
 import com.github.kr328.clash.service.util.sendServiceRecreated
-import io.dcloud.feature.barcode2.BarcodeProxy
-import io.dcloud.feature.sdk.DCSDKInitConfig
-import io.dcloud.feature.sdk.DCUniMPSDK
-import io.dcloud.feature.unimp.config.UniMPOpenConfiguration
 
 @Suppress("unused")
 class MainApplication : Application() {
+
     override fun attachBaseContext(base: Context?) {
         super.attachBaseContext(base)
 
@@ -22,7 +19,6 @@ class MainApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-
         // Initialize AppCenter
         Tracker.initialize(this)
 

@@ -11,15 +11,17 @@ import com.github.kr328.clash.service.ClashService
 import com.github.kr328.clash.service.TunService
 import com.github.kr328.clash.service.util.sendBroadcastSelf
 
-fun Context.startClashService(): Intent? {
+fun Context.startClashService(clock :Long): Intent? {
     val startTun = UiStore(this).enableVpn
 
     if (startTun) {
         val vpnRequest = VpnService.prepare(this)
         if (vpnRequest != null)
             return vpnRequest
-
-        startForegroundServiceCompat(TunService::class.intent)
+        var myintent =TunService::class.intent
+        myintent.putExtra("myclock",clock)
+        startForegroundServiceCompat(myintent)
+//        startForegroundServiceCompat(TunService::class.intent)
     } else {
         startForegroundServiceCompat(ClashService::class.intent)
     }
