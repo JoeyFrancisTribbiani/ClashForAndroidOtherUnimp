@@ -126,7 +126,7 @@ rules:$processStr
                             launch(Dispatchers.IO) {
                                 profileManage.run {
                                     var uuid = UUID.fromString(root)
-                                    var name = "NewProfile"
+                                    var name = "加速流量"
                                     create(Profile.Type.File, name)
                                     val target = DocumentsContract.buildDocumentUri(
                                         Authorities.FILES_PROVIDER,
@@ -170,7 +170,6 @@ rules:$processStr
                     }
                     if (p1 == "pause"){
                         stopClashService()
-                        Thread.sleep(2000L)
                         var status = "stoped"
                         if (clashRunning){
                             status=  "running"

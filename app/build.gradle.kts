@@ -4,18 +4,31 @@ plugins {
     id("com.android.application")
 }
 android {
+    signingConfigs {
+        create("release") {
+            storeFile = file("D:\\Android\\alias_release.jks")
+            storePassword = "123123"
+            keyAlias = "release"
+            keyPassword = "123123"
+        }
+    }
     defaultConfig {
         targetSdkVersion(30)   //最优26 2.8.11开始支持29~30
         ndk {
             abiFilters += listOf("armeabi-v7a", "x86", "arm64-v8a")
         }
-        manifestPlaceholders["apk.applicationId"] = "com.github.kr328.clash"
+        manifestPlaceholders["apk.applicationId"] = "com.github.joey.speednet"
     }
 //此处配置必须添加 否则无法正确运行
     aaptOptions {
         additionalParameters("--auto-add-overlay")
         //noCompress 'foo', 'bar'
         ignoreAssetsPattern = "!.svn:!.git:.*:!CVS:!thumbs.db:!picasa.ini:!*.scc:*~"
+    }
+    buildTypes {
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("release")
+        }
     }
 
 }

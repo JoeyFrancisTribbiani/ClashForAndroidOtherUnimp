@@ -28,7 +28,6 @@ import com.github.kr328.clash.util.logsDir
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import java.io.IOException
-import java.util.*
 
 class LogcatService : Service(), CoroutineScope by CoroutineScope(Dispatchers.Default), IInterface {
     private val cache = LogcatCache()
@@ -142,7 +141,7 @@ class LogcatService : Service(), CoroutineScope by CoroutineScope(Dispatchers.De
     private fun showNotification() {
         val notification = NotificationCompat
             .Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_logo_service)
+            .setSmallIcon(R.drawable.ic_logo_service_bak)
             .setColor(getColorCompat(R.color.color_clash_light))
             .setContentTitle(getString(R.string.clash_logcat))
             .setContentText(getString(R.string.running))

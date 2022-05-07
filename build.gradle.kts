@@ -36,8 +36,8 @@ subprojects {
     extensions.configure<BaseExtension> {
         val minSdkVersion = 21
         val targetSdkVersion = 30
-        val buildVersionCode = 204014
-        val buildVersionName = "2.4.14"
+        val buildVersionCode = 100000
+        val buildVersionName = "1.0.0"
         val defaultDimension = "feature"
 
         ndkVersion = "23.0.7599858"
@@ -46,7 +46,7 @@ subprojects {
 
         defaultConfig {
             if (isApp) {
-                applicationId = "com.github.kr328.clash"
+                applicationId = "com.github.joey.speednet"
             }
 
             minSdk = minSdkVersion
@@ -67,7 +67,7 @@ subprojects {
             if (!isApp) {
                 consumerProguardFiles("consumer-rules.pro")
             } else {
-                setProperty("archivesBaseName", "cfa-$versionName")
+                setProperty("archivesBaseName", "speednet-$versionName")
             }
         }
 
